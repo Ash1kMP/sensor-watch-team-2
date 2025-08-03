@@ -1,0 +1,21 @@
+{
+  "name": "queue-service",
+  "version": "1.0.0",
+  "description": "Queue service for handling non-critical and critical messages.",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "amqplib": "^0.8.0",
+    "express": "^4.17.1",
+    "nodemailer": "^6.4.11"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4",
+    "ts-node": "^10.4.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}

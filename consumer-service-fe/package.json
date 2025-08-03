@@ -1,0 +1,15 @@
+{
+    "name": "consumer-service-fe",
+    "version": "1.0.0",
+    "description": "Frontend for Consumer Service",
+    "main": "src/consumer.js",
+    "scripts": {
+        "start": "node src/consumer.js"
+    },
+    "dependencies": {
+        "amqplib": "^0.10.3",
+        "ws": "^8.18.3"
+    },
+    "author": "",
+    "license": "ISC"
+}

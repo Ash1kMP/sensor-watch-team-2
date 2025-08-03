@@ -1,0 +1,81 @@
+
+version: '3.8'
+
+services:
+  db-service:
+    build:
+      context: ./db-service
+    ports:
+      - "27017:27017" # Adjust according to your NoSQL database
+    networks:
+      - sensorwatch-network
+
+  queue-service:
+    build:
+      context: ./queue-service
+    ports:
+      - "5672:5672" 
+      - "15672:15672" 
+    networks:
+      - sensorwatch-network
+
+  mock-esp32-service:
+    build:
+      context: ./mock-esp32-service
+    ports:
+      - "8080:8080"
+    networks:
+      - sensorwatch-network
+    depends_on:
+      - queue-service
+
+  consumer-service-db:
+    build:
+      context: ./consumer-service-db
+    depends_on:
+      - queue-service
+      - db-service
+    networks:
+      - sensorwatch-network
+
+  consumer-service-fe:
+    build:
+      context: ./consumer-service-fe
+    depends_on:
+      - queue-service
+    ports:
+      - "3000:3000"
+    networks:
+      - sensorwatch-network
+
+  frontend-dashboard:
+    build:
+      context: ./frontend-dashboard
+    ports:
+      - "4200:4200"
+    networks:
+      - sensorwatch-network
+  
+  # nginx-gateway:
+  #   build:
+  #     context: ./nginx-gateway
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - backend-service
+  #     - frontend-dashboard
+  #     - queue-service
+  #   networks:
+  #     - sensorwatch-network
+  
+  # discovery-service:
+  #   build:
+  #     context: ./discovery-service
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - sensorwatch-network
+
+networks:
+  sensorwatch-network:
+    driver: bridge

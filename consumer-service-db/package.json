@@ -1,0 +1,13 @@
+{
+  "name": "consumer-service-db",
+  "version": "1.0.0",
+  "description": "Consumes sensor data from RabbitMQ and stores it in MongoDB.",
+  "main": "src/consumer.js",
+  "scripts": {
+    "start": "node src/consumer.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "mongodb": "^6.5.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "mock-esp32-service",
+  "version": "1.0.0",
+  "description": "A mock service simulating ESP32 emitting JSON data over WebSockets.",
+  "main": "src/mock-esp32.js",
+  "scripts": {
+    "start": "node src/mock-esp32.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3",
+    "amqplib": "^0.10.3"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
