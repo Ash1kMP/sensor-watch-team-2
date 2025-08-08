@@ -2,9 +2,9 @@ import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface SensorData {
-  ts: number | string; // epoch ms or ISO string
-  temp: number;
+  temperature: number;
   humidity: number;
+  timestamp: string; // epoch ms or ISO string
 }
 
 @Component({
@@ -16,15 +16,11 @@ interface SensorData {
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   // displayed values
-  temp = 0;
-  humidity = 0;
-  lastTs = new Date();
+  data = {} as SensorData;
 
   // config
   private wsUrl = 'ws://localhost:3000';
   private ws?: WebSocket;
-
-  constructor(private ngZone: NgZone) {}
 
   ngOnInit(): void {
     this.connect();
@@ -38,25 +34,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.ws = new WebSocket(this.wsUrl);
 
     this.ws.onmessage = (ev: MessageEvent) => {
-      let parsed: Partial<SensorData> | null = null;
-      try {
-        parsed = JSON.parse(ev.data);
-      } catch {
-        return;
-      }
-      if (!parsed) return;
+      let data = JSON.parse(ev.data) as SensorData;
 
-      this.ngZone.run(() => {
-        if (typeof parsed.temp === 'number') this.temp = parsed.temp;
-        if (typeof parsed.humidity === 'number') this.humidity = parsed.humidity;
+      console.log('Received data:', data);
 
-        if (parsed.ts !== undefined) {
-          const t = typeof parsed.ts === 'number' ? new Date(parsed.ts) : new Date(String(parsed.ts));
-          if (!isNaN(t.getTime())) this.lastTs = t;
-        } else {
-          this.lastTs = new Date();
-        }
-      });
+      this.data.temperature = data.temperature;
+      this.data.humidity = data.humidity;
+      this.data.timestamp = data.timestamp;
     };
 
     this.ws.onclose = () => {

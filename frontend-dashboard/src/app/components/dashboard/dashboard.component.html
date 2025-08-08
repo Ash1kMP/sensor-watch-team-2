@@ -1,20 +1,5 @@
-<div
-    style="font-family: system-ui, Arial, Helvetica; max-width:320px; padding:12px; border:1px solid #eee; border-radius:8px;">
-    <h4 style="margin:0 0 8px 0;">Sensor</h4>
-
-    <div style="display:flex; justify-content:space-between; gap:12px; margin-bottom:8px;">
-        <div style="flex:1;">
-            <small style="color:#666;">Temperature</small>
-            <div style="font-weight:600; font-size:1.1rem;">{{ temp | number:'1.1-1' }} °C</div>
-        </div>
-
-        <div style="flex:1; text-align:right;">
-            <small style="color:#666;">Humidity</small>
-            <div style="font-weight:600; font-size:1.1rem;">{{ humidity | number:'1.0-0' }} %</div>
-        </div>
-    </div>
-
-    <div style="font-size:12px; color:#666;">
-        Last update: <span>{{ lastTs | date:'short' }}</span>
-    </div>
+<div>
+    <h3> temp : {{data.temperature}}</h3>
+    <h3> humidity : {{data.humidity}}</h3>
+    <h3> ts : {{data.timestamp}}</h3>
 </div>
