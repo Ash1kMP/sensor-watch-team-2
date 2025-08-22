@@ -1,5 +1,5 @@
 {
-  "name": "db-service",
+  "name": "timeseries-db-service",
   "version": "1.0.0",
   "description": "Database service for SensorWatch application",
   "main": "src/index.ts",

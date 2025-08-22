@@ -3,7 +3,7 @@ const { MongoClient } = require('mongodb');
 
 const RABBITMQ_URL = 'amqp://user:password@queue-service:5672';
 const QUEUE_NAME = 'sensor-data-db';
-const MONGO_URL = 'mongodb://db-service:27017';
+const MONGO_URL = 'mongodb://timeseries-db-service:27017';
 const DB_NAME = 'sensorwatch';
 const COLLECTION_NAME = 'sensor-data';
 

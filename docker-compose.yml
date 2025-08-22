@@ -1,12 +1,20 @@
 version: '3.8'
 services:
-  db-service:
+  timeseries-db-service:
     build:
-      context: ./db-service
+      context: ./timeseries-db-service
     ports:
       - "27017:27017" # Adjust according to your NoSQL database
     networks:
       - sensorwatch-network
+
+  # sql-db-service:
+  #   build:
+  #     context: ./sql-db-service
+  #   ports:
+  #     - "5432:5432" # Adjust according to your SQL database
+  #   networks:
+  #     - sensorwatch-network
 
   queue-service:
     build:
@@ -32,7 +40,7 @@ services:
       context: ./consumer-service-db
     depends_on:
       - queue-service
-      - db-service
+      - timeseries-db-service
     networks:
       - sensorwatch-network
 
@@ -45,6 +53,22 @@ services:
       - "3000:3000"
     networks:
       - sensorwatch-network
+
+  # telemetry-service:
+  #   build:
+  #     context: ./telemetry-service
+  #   ports:
+  #     - "4000:4000"
+  #   networks:
+  #     - sensorwatch-network
+  
+  # auth-service:
+  #   build:
+  #     context: ./auth-service
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - sensorwatch-network
 
   frontend-dashboard:
     build:
