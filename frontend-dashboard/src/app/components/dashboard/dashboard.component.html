@@ -1,5 +1,68 @@
-<div>
-    <h3> temp : {{data.temperature}}</h3>
-    <h3> humidity : {{data.humidity}}</h3>
-    <h3> ts : {{data.timestamp}}</h3>
+<div class="dashboard-wrapper">
+    <!-- Header / Breadcrumb -->
+    <div class="header">
+        <h2>Dashboard / Default</h2>
+    </div>
+
+    <!-- Overview cards -->
+    <div class="overview">
+        <div class="card">
+            <h3>Active Alerts</h3>
+            <span class="value alert">2</span>
+        </div>
+        <div class="card">
+            <h3>Active Sensors</h3>
+            <span class="value">100</span>
+        </div>
+        <div class="card">
+            <h3>Inactive Sensors</h3>
+            <span class="value">20</span>
+        </div>
+        <div class="card">
+            <h3>Total Sensors</h3>
+            <span class="value">120</span>
+        </div>
+    </div>
+
+    <!-- Sensor readings -->
+    <h3 class="section-title">Sensor Readings</h3>
+    <div class="sensor-grid">
+        <div class="sensor-card" *ngFor="let d of sensors">
+            <div class="sensor-header">
+                <span class="device">Device {{d.deviceId}}</span>
+                <span class="location">Location {{d.locationId}}</span>
+            </div>
+
+            <div class="sensor-body">
+                <p>Temperature</p>
+                <div class="bar">
+                    <span class="val" [class.alert]="d.temperature < 18">{{d.temperature}}°F</span>
+                </div>
+
+                <p>Humidity</p>
+                <div class="bar">
+                    <span class="val">{{d.humidity}}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right sidebar (mock) -->
+    <div class="sidebar">
+        <div class="profile">
+            <img src="https://via.placeholder.com/40" alt="user" />
+            <div>
+                <p>User’s name</p>
+                <small>username"&#64;"email.com</small>
+            </div>
+        </div>
+
+        <h4>Notifications</h4>
+        <ul class="notifications">
+            <li class="alert">Sensor AB1 – Humidity (Just now)</li>
+            <li class="alert">Sensor AB1 – Humidity (5m ago)</li>
+            <li class="alert">Sensor AB1 – Humidity (10m ago)</li>
+            <li class="update">System Update (1h ago)</li>
+        </ul>
+    </div>
 </div>

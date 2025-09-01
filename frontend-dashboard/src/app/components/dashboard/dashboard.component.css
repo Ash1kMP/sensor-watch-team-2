@@ -1,0 +1,144 @@
+.dashboard-wrapper {
+  display: grid;
+  grid-template-columns: 75% 25%; /* left 75%, right 25% */
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+.header {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  grid-column: 1 / 2; /* only inside main content */
+}
+
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.card h3 {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.card .value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card .value.alert {
+  color: red;
+}
+
+.section-title {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  grid-column: 1 / 2; /* main content only */
+}
+
+.sensor-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.sensor-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.metric-row {
+  margin-bottom: 1rem;
+}
+
+.sensor-body p {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0.25rem 0;
+}
+
+.val {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  display: block;
+}
+
+.val.alert {
+  color: red;
+}
+
+
+/* Sidebar fixed to right */
+.sidebar {
+  grid-column: 2 / 3;
+  display: flex;
+  flex-direction: column; /* ✅ stack vertically */
+  gap: 1rem;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.profile {
+  display: flex;
+  flex-direction: column; /* ✅ avatar and text vertical */
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.profile img {
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+}
+
+.notifications {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notifications li {
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #eee;
+}
+
+.notifications li.alert {
+  color: red;
+}
+
+.notifications li.update {
+  color: orange;
+}

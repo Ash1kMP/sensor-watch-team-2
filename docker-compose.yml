@@ -8,13 +8,13 @@ services:
     networks:
       - sensorwatch-network
 
-  # sql-db-service:
-  #   build:
-  #     context: ./sql-db-service
-  #   ports:
-  #     - "5432:5432" # Adjust according to your SQL database
-  #   networks:
-  #     - sensorwatch-network
+  sql-db-service:
+    build:
+      context: ./sql-db-service
+    ports:
+      - "5432:5432" # Adjust according to your SQL database
+    networks:
+      - sensorwatch-network
 
   queue-service:
     build:
@@ -62,13 +62,13 @@ services:
   #   networks:
   #     - sensorwatch-network
   
-  # auth-service:
-  #   build:
-  #     context: ./auth-service
-  #   ports:
-  #     - "5000:5000"
-  #   networks:
-  #     - sensorwatch-network
+  auth-service:
+    build:
+      context: ./auth-service
+    ports:
+      - "5000:5000"
+    networks:
+      - sensorwatch-network
 
   frontend-dashboard:
     build:
