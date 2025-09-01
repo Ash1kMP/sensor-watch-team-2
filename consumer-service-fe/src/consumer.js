@@ -1,39 +1,35 @@
 const amqp = require('amqplib');
-
-const RABBITMQ_URL = 'amqp://user:password@queue-service:5672';
-const QUEUE_NAME = 'sensor-data-frontend';
-const PORT = 3000;
-
-// create a websocker serve that consumes messages from rabbitmq and sends them to the frontend
 const WebSocket = require('ws');
+
+const RABBITMQ_URL = process.env.RABBITMQ_URL
+  || (process.env.DOCKER === 'true' ? 'amqp://user:password@queue-service:5672'
+                                    : 'amqp://user:password@localhost:5672');
+const QUEUE_NAME = process.env.FRONTEND_QUEUE || 'sensor-data-frontend';
+const PORT = Number(process.env.PORT || 3000);
+
 const wss = new WebSocket.Server({ port: PORT });
 console.log(`WebSocket server is running on ws://localhost:${PORT}`);
 
 async function start() {
-    // Connect to RabbitMQ
-    const conn = await amqp.connect(RABBITMQ_URL);
-    const channel = await conn.createChannel();
-    await channel.assertQueue(QUEUE_NAME, { durable: true });
-    console.log('Connected to RabbitMQ, waiting for messages...');
+  const conn = await amqp.connect(RABBITMQ_URL);
+  conn.on('close', () => { console.error('AMQP connection closed'); process.exit(1); });
+  const channel = await conn.createChannel();
+  await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-    channel.consume(QUEUE_NAME, (msg) => {
-        if (msg !== null) {
-            const data = JSON.parse(msg.content.toString());
-            console.log('Received from queue:', data);
-
-            // Broadcast the message to all connected WebSocket clients
-            wss.clients.forEach(client => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(data));
-                }
-            });
-
-            channel.ack(msg);
-        }
-    }, { noAck: false });
+  console.log(`Connected to RabbitMQ at ${RABBITMQ_URL}, consuming "${QUEUE_NAME}"`);
+  channel.consume(QUEUE_NAME, msg => {
+    if (!msg) return;
+    try {
+      const body = msg.content.toString();
+      const data = JSON.parse(body);
+      wss.clients.forEach(c => c.readyState === WebSocket.OPEN && c.send(JSON.stringify(data)));
+    } catch {
+      wss.clients.forEach(c => c.readyState === WebSocket.OPEN && c.send(msg.content.toString()));
+    } finally {
+      channel.ack(msg);
+    }
+  }, { noAck: false });
 }
 
-start().catch(err => {
-    console.error('Error in consumer-service:', err);
-    process.exit(1);
-});
+start().catch(err => { console.error('Error in consumer-service:', err); process.exit(1); });
+RABBITMQ_URL

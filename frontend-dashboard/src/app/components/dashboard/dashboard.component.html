@@ -1,5 +1,43 @@
-<div>
+<!-- <div>
     <h3> temp : {{data.temperature}}</h3>
     <h3> humidity : {{data.humidity}}</h3>
     <h3> ts : {{data.timestamp}}</h3>
+</div> -->
+
+<!-- 
+<div>
+  <h3>temp: {{ data.temperature ?? '—' }}</h3>
+  <h3>humidity: {{ data.humidity ?? '—' }}</h3>
+  <h3>ts: {{ data.timestamp || '—' }}</h3>
+</div> -->
+
+
+<div class="p-4">
+  <h2>Live Telemetry</h2>
+  <div>device: {{ data.deviceId || '—' }}</div>
+  <div>temp: {{ data.temperature ?? '—' }}</div>
+  <div>humidity: {{ data.humidity ?? '—' }}</div>
+  <div>ts: {{ data.timestamp | date:'medium' }}</div>
+
+  <hr>
+
+  <h3>Recent (latest {{ history.length }} / 100)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Device</th>
+        <th>Temp</th>
+        <th>Humidity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of history">
+        <td>{{ r.timestamp | date:'mediumTime' }}</td>
+        <td>{{ r.deviceId || '—' }}</td>
+        <td>{{ r.temperature ?? '—' }}</td>
+        <td>{{ r.humidity ?? '—' }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>

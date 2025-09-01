@@ -1,0 +1,14 @@
+{
+  "name": "esp32-bridge",
+  "version": "1.0.0",
+  "description": "Bridge ESP32 MQTT telemetry to RabbitMQ queues for FE and DB.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "mqtt": "^5.9.3"
+  }
+}

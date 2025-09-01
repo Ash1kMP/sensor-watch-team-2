@@ -8,24 +8,53 @@ services:
     networks:
       - sensorwatch-network
 
+  # queue-service:
+  #   build:
+  #     context: ./queue-service
+  #   ports:
+  #     - "5672:5672" 
+  #     - "15672:15672" 
+  #   networks:
+  #     - sensorwatch-network
+
   queue-service:
-    build:
-      context: ./queue-service
+    image: rabbitmq:3.13-management
+    container_name: queue-service
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     ports:
-      - "5672:5672" 
-      - "15672:15672" 
+      - "5672:5672"     # AMQP for apps
+      - "15672:15672"   # Management UI
     networks:
       - sensorwatch-network
 
-  mock-esp32-service:
+
+  # mock-esp32-service:
+  #   build:
+  #     context: ./mock-esp32-service
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - sensorwatch-network
+  #   depends_on:
+  #     - queue-service
+
+  esp32-bridge:
     build:
-      context: ./mock-esp32-service
-    ports:
-      - "8080:8080"
-    networks:
-      - sensorwatch-network
+      context: ./esp32-bridge
+    environment:
+      - MQTT_URL=${MQTT_URL:-mqtt://test.mosquitto.org:1883}
+      - MQTT_TOPIC=${MQTT_TOPIC:-dev/+/telemetry}
+      - RABBITMQ_URL=${RABBITMQ_URL:-amqp://user:password@queue-service:5672}
+      - FRONTEND_QUEUE=${FRONTEND_QUEUE:-sensor-data-frontend}
+      - DB_QUEUE=${DB_QUEUE:-sensor-data-db}
     depends_on:
       - queue-service
+    networks:
+      - sensorwatch-network
+
+
 
   consumer-service-db:
     build:
@@ -36,13 +65,35 @@ services:
     networks:
       - sensorwatch-network
 
+  # consumer-service-fe:
+  #   build:
+  #     context: ./consumer-service-fe
+  #   depends_on:
+  #     - queue-service
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - sensorwatch-network
+
+  # new
+  # consumer-service-fe:
+  #   build: ./consumer-service-fe
+  #   ports:
+  #     - "3000:3000"   # expose to host
+  #   depends_on:
+  #     - queue-service
+  
   consumer-service-fe:
-    build:
-      context: ./consumer-service-fe
-    depends_on:
-      - queue-service
+    build: ./consumer-service-fe
+    environment:
+      - DOCKER=true
+      - RABBITMQ_URL=amqp://user:password@queue-service:5672
+      - FRONTEND_QUEUE=sensor-data-frontend
     ports:
-      - "3000:3000"
+      - "3000:3000"   # expose WS to your browser
+    depends_on:
+      queue-service:
+        condition: service_healthy
     networks:
       - sensorwatch-network
 
