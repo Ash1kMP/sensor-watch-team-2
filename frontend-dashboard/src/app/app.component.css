@@ -1,0 +1,159 @@
+:root {
+  --bg: #0b1020;
+  --surface: #111936;
+  --muted: #8ea1b2;
+  --text: #e8eef5;
+  --accent: #64b5f6;
+  --ok: #43a047;
+  --warn: #ffa000;
+  --danger: #ef5350;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    sans-serif;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(100,181,246,.12), transparent),
+              radial-gradient(1200px 600px at 120% 110%, rgba(129,199,132,.10), transparent);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+.sidebar {
+  background: var(--surface);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+}
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+nav a.active,
+nav a:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+nav .spacer {
+  flex: 1;
+}
+nav .logout {
+  cursor: pointer;
+  color: #f5b7b1;
+}
+
+.main {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.title {
+  font-weight: 600;
+}
+.content {
+  padding: 20px;
+}
+
+.card-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.card {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+.card .label {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.card .value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.card.ok {
+  border: 1px solid rgba(67, 160, 71, 0.4);
+}
+.card.warn {
+  border: 1px solid rgba(255, 160, 0, 0.4);
+}
+
+.section {
+  margin-top: 20px;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+}
+.table th {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.chart-card {
+  padding: 0;
+  overflow: hidden;
+}
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+.chart-body {
+  padding: 10px 12px;
+}
+canvas {
+  width: 100%;
+  height: 260px;
+}

@@ -1,1 +1,25 @@
+<!-- <router-outlet></router-outlet> -->
+
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">SensorWatch</div>
+<nav>
+<a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+<!-- add more sections later: Devices, Alerts, Settings -->
+<div class="spacer"></div>
+<a (click)="logout()" class="logout">Logout</a>
+</nav>
+</aside>
+
+<div class="main">
+<header class="topbar">
+<div class="title">Dashboard</div>
+<div class="actions">
+<span class="user" *ngIf="username">Hi, {{ username }}</span>
+</div>
+</header>
+<section class="content">
 <router-outlet></router-outlet>
+</section>
+</div>
+</div>

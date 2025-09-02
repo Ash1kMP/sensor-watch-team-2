@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   db-service:
     build:
@@ -83,6 +82,16 @@ services:
   #   depends_on:
   #     - queue-service
   
+  auth-service:
+    build: ./auth-service
+    environment:
+      - MONGO_URL=mongodb://db-service:27017/sensorwatch
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-me}
+    depends_on:
+      - db-service
+    networks:
+      - sensorwatch-network
+
   consumer-service-fe:
     build: ./consumer-service-fe
     environment:
@@ -90,10 +99,10 @@ services:
       - RABBITMQ_URL=amqp://user:password@queue-service:5672
       - FRONTEND_QUEUE=sensor-data-frontend
     ports:
-      - "3000:3000"   # expose WS to your browser
+      - "3000:3000"
     depends_on:
       queue-service:
-        condition: service_healthy
+        condition: service_started
     networks:
       - sensorwatch-network
 
@@ -104,18 +113,52 @@ services:
       - "4200:4200"
     networks:
       - sensorwatch-network
-  
+
+  nginx-gateway:
+    build: ./nginx-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend-dashboard
+      - consumer-service-fe
+      - auth-service
+    networks:
+      - sensorwatch-network
+
+      
   # nginx-gateway:
-  #   build:
-  #     context: ./nginx-gateway
+  #     build:
+  #       context: ./nginx-gateway
+  #     ports:
+  #       - "80:80"
+  #     depends_on:
+  #       - frontend-dashboard
+  #       - queue-service
+  #     networks:
+  #       - sensorwatch-network
+  # consumer-service-fe:
+  #   build: ./consumer-service-fe
+  #   environment:
+  #     - DOCKER=true
+  #     - RABBITMQ_URL=amqp://user:password@queue-service:5672
+  #     - FRONTEND_QUEUE=sensor-data-frontend
   #   ports:
-  #     - "80:80"
+  #     - "3000:3000"   # expose WS to your browser
   #   depends_on:
-  #     - backend-service
-  #     - frontend-dashboard
-  #     - queue-service
+  #     queue-service:
+  #       condition: service_healthy
   #   networks:
   #     - sensorwatch-network
+
+  # frontend-dashboard:
+  #   build:
+  #     context: ./frontend-dashboard
+  #   ports:
+  #     - "4200:4200"
+  #   networks:
+  #     - sensorwatch-network
+  
+  
   
   # discovery-service:
   #   build:

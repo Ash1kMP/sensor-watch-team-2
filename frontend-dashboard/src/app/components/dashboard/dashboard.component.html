@@ -11,7 +11,7 @@
   <h3>ts: {{ data.timestamp || '—' }}</h3>
 </div> -->
 
-
+<!-- 
 <div class="p-4">
   <h2>Live Telemetry</h2>
   <div>device: {{ data.deviceId || '—' }}</div>
@@ -40,4 +40,263 @@
       </tr>
     </tbody>
   </table>
+</div> -->
+
+<!--  New
+<div class="card-grid">
+  <div class="card">
+    <div class="label">Device</div>
+    <div class="value">{{ latest?.deviceId || "—" }}</div>
+  </div>
+  <div class="card ok">
+    <div class="label">Temperature</div>
+    <div class="value">{{ latest?.temperature ?? "—" }} °</div>
+  </div>
+  <div class="card warn">
+    <div class="label">Humidity</div>
+    <div class="value">{{ latest?.humidity ?? "—" }} %</div>
+  </div>
+  <div class="card">
+    <div class="label">Last update</div>
+    <div class="value">{{ latest?.timestamp | date : "medium" }}</div>
+  </div>
+</div>
+
+<div class="section card chart-card">
+  <div class="chart-header">
+    <div class="label">Temperature (live)</div>
+    <div class="label">Last {{ Math.min(history.length, 60) }} samples</div>
+  </div>
+  <div class="chart-body"><canvas id="tempChart"></canvas></div>
+</div>
+
+<div class="section card">
+  <div class="label" style="margin-bottom: 8px">Recent telemetry</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Device</th>
+        <th>Temp</th>
+        <th>Humidity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of history; let i = index" [attr.data-i]="i">
+        <td>{{ r.timestamp | date : "mediumTime" }}</td>
+        <td>{{ r.deviceId || "—" }}</td>
+        <td>{{ r.temperature ?? "—" }}</td>
+        <td>{{ r.humidity ?? "—" }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div> -->
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="brand">SensorWatch</div>
+
+  <div class="top-actions">
+    <div class="search">
+      <input type="text" placeholder="Search" aria-label="Search" />
+      <svg viewBox="0 0 24 24" class="icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.5 21.5 20 15.5 14zM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    </div>
+    <div class="live chip" [class.ok]="isConnected" [class.red]="!isConnected">
+      {{ isConnected ? 'Live' : 'Disconnected' }}
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <main class="main">
+    <div class="crumbs">
+      <a>Dashboard</a> <span>/</span> <a>Sensor</a> <span>/</span> <span class="muted">{{ deviceName }}</span>
+    </div>
+
+    <div class="device-header">
+      <div>
+        <h1>{{ deviceName }}</h1>
+        <div class="location">{{ locationName }}</div>
+      </div>
+      <div class="device-meta">
+        <div class="updated">Last Updated : {{ lastUpdated }}</div>
+        <button class="link">Modify</button>
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <section class="card">
+      <div class="card-head">
+        <div class="title"><span class="triangle">▲</span> <span>Sensor Insights</span></div>
+        <div class="right">
+          <svg class="clock" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.75a10.25 10.25 0 1 0 0 20.5A10.25 10.25 0 0 0 12 1.75Zm.75 5.5h-1.5v5.25l4.5 2.7.75-1.23-3.75-2.22V7.25Z"/></svg>
+          <span class="muted">This Week</span>
+          <button class="chev" aria-label="Collapse">⌃</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><div class="label">Temperature</div></div>
+          <div class="mini-chart"><canvas id="tempChart"></canvas></div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="sub">Current Reading</div>
+              <div class="value temp">{{ latest?.temperature ?? '—' }}<span class="unit">°F</span></div>
+            </div>
+            <div class="metric">
+              <div class="sub">Threshold Range</div>
+              <div class="range">
+                <span>From</span> <b>{{ tempF.low.toFixed(1) }}<span class="unit">°F</span></b>
+                <span class="to">To</span> <b>{{ tempF.high.toFixed(1) }}<span class="unit">°F</span></b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="label">Humidity</div></div>
+          <div class="mini-chart"><canvas id="humChart"></canvas></div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="sub">Current Reading</div>
+              <div class="value hum">{{ latest?.humidity?.toFixed(1) ?? '—' }}<span class="unit">%</span></div>
+            </div>
+            <div class="metric">
+              <div class="sub">Threshold Range</div>
+              <div class="range">
+                <span>From</span> <b>{{ humidityPct.low.toFixed(1) }}<span class="unit">%</span></b>
+                <span class="to">To</span> <b>{{ humidityPct.high.toFixed(1) }}<span class="unit">%</span></b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Telemetry Log -->
+    <section class="card">
+      <div class="card-head">
+        <div class="title">Sensor/Telemetry Log</div>
+        <div class="right gap">
+          <button class="ghost" (click)="exportCSV()">Export ⭳</button>
+          <button class="ghost" (click)="showFilters = !showFilters">Filter ▾</button>
+          <button class="ghost" (click)="setSort('date')">Sort ⇅</button>
+        </div>
+      </div>
+
+      <!-- Filters bar -->
+      <div class="filters" *ngIf="showFilters">
+        <label>Device
+          <select [(ngModel)]="filterDevice" (change)="goto(1)" disabled>
+            <option value="">All</option>
+            <option *ngFor="let d of devices" [value]="d">{{ d }}</option>
+          </select>
+        </label>
+
+        <label>Status
+          <select [(ngModel)]="filterStatus" (change)="goto(1)">
+            <option value="all">All</option>
+            <option value="Alert">Alert</option>
+            <option value="Within Limit">Within Limit</option>
+          </select>
+        </label>
+
+        <label>From
+          <input type="date" [(ngModel)]="filterFrom" (change)="goto(1)" />
+        </label>
+
+        <label>To
+          <input type="date" [(ngModel)]="filterTo" (change)="goto(1)" />
+        </label>
+
+        <label>Sort
+          <select [(ngModel)]="sortBy" (change)="goto(1)">
+            <option value="date">Date</option>
+            <option value="temperature">Temperature</option>
+            <option value="humidity">Humidity</option>
+            <option value="status">Status</option>
+          </select>
+        </label>
+
+        <label>Direction
+          <select [(ngModel)]="sortDir" (change)="goto(1)">
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+        </label>
+
+        <label>Rows
+          <select [(ngModel)]="pageSize" (change)="goto(1)">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th (click)="setSort('date')">Date</th>
+              <th>Time</th>
+              <th (click)="setSort('temperature')">Temperature</th>
+              <th (click)="setSort('humidity')">Humidity</th>
+              <th (click)="setSort('status')">Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of pageRows; let i = index" [attr.data-i]="i">
+              <td>{{ fmtDate(r.timestamp) }}</td>
+              <td>{{ fmtTime(r.timestamp) }}</td>
+              <td [class.alert]="r.temperature != null && (r.temperature < tempF.low || r.temperature > tempF.high)">
+                <b>{{ r.temperature != null ? r.temperature : '—' }}</b><span class="unit">°F</span>
+              </td>
+              <td>{{ r.humidity != null ? r.humidity.toFixed(1) : '—' }}<span class="unit">%</span></td>
+              <td>
+                <span class="chip"
+                  [class.red]="statusOf(r) === 'Alert'"
+                  [class.gray]="statusOf(r) !== 'Alert'">
+                  {{ statusOf(r) }}
+                </span>
+              </td>
+              <td class="notes">
+                <ng-container *ngIf="statusOf(r) === 'Alert'; else within">
+                  Temp out of range
+                </ng-container>
+                <ng-template #within>Within Limit</ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pager">
+        <button class="ghost" (click)="goto(page-1)" [disabled]="page<=1">&lt;</button>
+        <button class="page" *ngFor="let p of [].constructor(totalPages); let idx = index"
+                [class.active]="page === (idx+1)"
+                (click)="goto(idx+1)">{{ idx+1 }}</button>
+        <button class="ghost" (click)="goto(page+1)" [disabled]="page>=totalPages">&gt;</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Simple right rail placeholder (optional) -->
+  <aside class="rail">
+    <section class="card rail-card user">
+      <div class="user-top">
+        <div class="avatar-lg"></div>
+        <div>
+          <div class="name">User’s name</div>
+          <div class="email">username&#64;email.com</div>
+        </div>
+      </div>
+    </section>
+    <section class="card rail-card">
+      <div class="row"><div class="label">System Settings</div><div class="arrow">›</div></div>
+    </section>
+  </aside>
 </div>

@@ -1,0 +1,59 @@
+.auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #0b1020, #121a35);
+}
+.panel {
+  width: 100%;
+  max-width: 380px;
+  background: #111936;
+  color: #e8eef5;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.panel h1 {
+  margin: 6px 0 16px;
+  font-size: 22px;
+}
+label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #9fb2c3;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1530;
+  color: #e8eef5;
+}
+button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 12px;
+  background: #64b5f6;
+  color: #0b1020;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.error {
+  margin-top: 10px;
+  color: #ef9a9a;
+}
+.hint {
+  margin-top: 12px;
+  color: #9fb2c3;
+  font-size: 12px;
+}

@@ -1,0 +1,26 @@
+<div class="auth-wrap">
+  <div class="panel">
+    <h1>Create account</h1>
+    <form (ngSubmit)="submit()">
+      <label>Name</label>
+      <input type="text" [(ngModel)]="name" name="name" required />
+      <label>Email</label>
+      <input type="email" [(ngModel)]="email" name="email" required />
+      <label>Password</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        name="password"
+        required
+        minlength="6"
+      />
+      <button [disabled]="loading">
+        {{ loading ? "Creating…" : "Create account" }}
+      </button>
+      <div class="error" *ngIf="error">{{ error }}</div>
+      <div class="hint">
+        Already have an account? <a routerLink="/login">Sign in</a>
+      </div>
+    </form>
+  </div>
+</div>
