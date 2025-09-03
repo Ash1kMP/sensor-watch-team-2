@@ -33,6 +33,10 @@ body::before {
   grid-template-columns: 240px 1fr;
   min-height: 100vh;
 }
+.layout, .main, .content {
+max-width: 100%;
+overflow-x: hidden;
+}
 .sidebar {
   background: var(--surface);
   padding: 20px 12px;
