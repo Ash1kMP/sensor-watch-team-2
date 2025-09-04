@@ -1,57 +1,3 @@
-// import { Injectable, NgZone } from '@angular/core';
-// import { BehaviorSubject } from 'rxjs';
-
-// export interface Telemetry {
-//   deviceId?: string;
-//   temperature: number | null;
-//   humidity: number | null;
-//   timestamp: string;
-// }
-
-// @Injectable({ providedIn: 'root' })
-// export class WsService {
-//   private ws?: WebSocket;
-//   private delay = 2000;
-//   public stream$ = new BehaviorSubject<Telemetry | null>(null);
-
-//   constructor(private zone: NgZone) {
-//     this.connect();
-//   }
-
-//   private url(): string {
-//     const anyWin = window as any;
-//     if (anyWin.__WS_URL__) return anyWin.__WS_URL__ as string;
-//     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-//     return `${proto}//${location.hostname}:3000`;
-//   }
-
-//   private connect() {
-//     const url = this.url();
-//     this.ws = new WebSocket(url);
-//     this.ws.onopen = () => {
-//       this.delay = 2000;
-//     };
-//     this.ws.onmessage = (ev) =>
-//       this.zone.run(() => {
-//         try {
-//           this.stream$.next(JSON.parse(ev.data));
-//         } catch {}
-//       });
-//     this.ws.onclose = () => this.reconnect();
-//     this.ws.onerror = () => {
-//       try {
-//         this.ws?.close();
-//       } catch {}
-//     };
-//   }
-//   private reconnect() {
-//     setTimeout(() => {
-//       this.delay = Math.min(this.delay * 1.5, 15000);
-//       this.connect();
-//     }, this.delay);
-//   }
-// }
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 
@@ -67,7 +13,7 @@ export interface Telemetry {
 export class WsService {
   stream$ = new Subject<Telemetry>();
   connected$ = new BehaviorSubject<boolean>(false);
-
+  public messages$ = this.stream$.asObservable();
   private socket?: WebSocket;
   private reconnectMs = 1500;
 
