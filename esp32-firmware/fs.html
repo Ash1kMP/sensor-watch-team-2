@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Filesystem Management</title>
+  <style>
+    body{font-family:Arial,sans-serif;text-align:center;background:#f4f4f4;margin:0}
+    h1{color:#333}
+    table{margin:0 auto;border-collapse:collapse}
+    th,td{padding:8px 12px;border:1px solid #ccc}
+    .button{background:#3498db;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;margin:5px;border:none;cursor:pointer}
+    .button:hover{background:#2377a5}
+    #msg{margin-top:10px;color:#374151}
+  </style>
+</head>
+<body>
+  <h1>Filesystem Management</h1>
+  <div id="fsInfo"></div>
+  <div>
+    <button onclick="listFiles()" class="button">Refresh File List</button>
+    <a href="/format-fs" class="button">Format Filesystem</a>
+    <a href="/manage" class="button">Back</a>
+  </div>
+  <div id="fileList"><!-- populated by JS --></div>
+  <h2>Upload File</h2>
+  <form method="POST" action="/upload-file" enctype="multipart/form-data" id="uploadForm">
+    <input type="file" name="file" />
+    <input type="submit" value="Upload File" class="button" />
+  </form>
+  <div id="msg"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function note(t){ $("msg").textContent = t; }
+
+    function listFiles() {
+      note("Loading files…");
+      fetch("/list-files?v="+Date.now())
+        .then(r => r.json())
+        .then(data => {
+          let html = "<table><tr><th>Filename</th><th>Size (bytes)</th><th>Download</th><th>View</th><th>Delete</th></tr>";
+          (data.files||[]).forEach(file => {
+            html += "<tr>";
+            html += "<td>" + file.name + "</td>";
+            html += "<td>" + file.size + "</td>";
+            html += "<td><a href='/download?file=" + encodeURIComponent(file.name) + "' class='button'>Download</a></td>";
+            html += "<td><a href='/view-file?file=" + encodeURIComponent(file.name) + "' class='button' target='_blank' rel='noopener'>View</a></td>";
+            html += "<td><a href='/delete-file?file=" + encodeURIComponent(file.name) + "' class='button' onclick=\"return confirm('Delete ' + decodeURIComponent('" + encodeURIComponent(file.name) + "') + '?');\">Delete</a></td>";
+            html += "</tr>";
+          });
+          html += "</table>";
+          $("fileList").innerHTML = html;
+          note((data.files||[]).length ? "Loaded " + (data.files||[]).length + " file(s)." : "No files found.");
+        })
+        .catch(err => { console.error("Error fetching file list:", err); note("Error loading files."); });
+    }
+
+    function updateFsInfo() {
+      fetch("/fsinfo?v="+Date.now())
+        .then(r => r.json())
+        .then(data => {
+          $("fsInfo").innerHTML =
+            "Filesystem Total: " + data.total + " bytes, " +
+            "Used: " + data.used + " bytes, " +
+            "Free: " + data.free + " bytes";
+        })
+        .catch(err => { console.error("Error fetching FS info:", err); });
+    }
+
+    // Show a small note on upload submit
+    document.getElementById("uploadForm").addEventListener("submit", () => {
+      note("Uploading…");
+      setTimeout(() => note(""), 3000);
+    });
+
+    window.onload = function() {
+      listFiles();
+      updateFsInfo();
+    };
+  </script>
+</body>
+</html>

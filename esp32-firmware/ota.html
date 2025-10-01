@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OTA Update</title>
+  <style>
+    body{font-family:Arial,sans-serif;text-align:center;background:#f4f4f4;}
+    .progress-bar{width:50%;margin:50px auto;background:#ddd;height:20px;border-radius:10px;overflow:hidden;}
+    .progress{height:100%;width:0%}
+    .message{margin-top:20px;font-size:1.2em}
+  </style>
+</head>
+<body>
+  <h1>OTA Update</h1>
+  <form method="POST" action="/update" enctype="multipart/form-data">
+    <input type="file" name="update" />
+    <input type="submit" value="Update" />
+  </form>
+
+  <div id="updateSection" style="display:none;">
+    <h1>Updating firmware…</h1>
+    <div class="progress-bar"><div class="progress" id="progress"></div></div>
+    <p class="message" id="message">Waiting for update…</p>
+  </div>
+
+  <script>
+    // Build WS URL from current origin so it works on any port/HTTP/HTTPS
+    const WS_URL=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';
+    const ws=new WebSocket(WS_URL);
+
+    ws.onmessage=(e)=>{
+      try{
+        const d=JSON.parse(e.data);
+        if(d.progress!==undefined){
+          document.getElementById('progress').style.width=d.progress+'%';
+        }
+        if(d.message){
+          document.getElementById('message').textContent=d.message;
+        }
+        if(d.finished){
+          setTimeout(()=>location.href='/',3000);
+        }
+      }catch(err){
+        console.log('WS parse error',err);
+      }
+    };
+
+    document.querySelector('form').addEventListener('submit',()=>{
+      document.querySelector('form').style.display='none';
+      document.getElementById('updateSection').style.display='block';
+    });
+  </script>
+</body>
+</html>

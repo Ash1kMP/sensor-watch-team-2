@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WinWinLabs Real-Time Data</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; margin: 0; }
+    header { background:#1f2937; color:#fff; padding:12px 16px; text-align:left; }
+    h1 { color: #333; margin-top: 10px; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 12px; }
+    .data { font-size: 1.1em; margin: 8px; }
+    .sensor { margin: 10px 0; padding: 10px; background: #fff; border-radius: 5px;
+              box-shadow: 0 0 5px rgba(0,0,0,0.1); text-align:left; }
+    .footer { margin: 20px 0; font-size: 0.9em; color: #777; }
+    .button { background-color: #3498db; color: white; padding: 10px 20px;
+              text-decoration: none; border-radius: 5px; display: inline-block; }
+    .button:hover { background-color: #2377a5; }
+
+    /* ESP status pills */
+    .pills { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:8px 0; }
+    .pill { padding:6px 10px; border-radius:999px; font-size:0.9em; background:#e5e7eb; color:#111; }
+    .ok   { background:#d1fae5; }
+    .warn { background:#fde68a; }
+    .err  { background:#fecaca; }
+
+    /* Alerts list */
+    #alerts { max-width:900px; margin:10px auto; text-align:left; }
+    .alert { padding:10px; border-radius:6px; margin:8px 0; }
+    .alert.info  { background:#e0f2fe; }
+    .alert.warn  { background:#fff7ed; }
+    .alert.error { background:#fee2e2; }
+    .kv { display:grid; grid-template-columns: 160px 1fr; gap:6px 12px; margin:10px auto; max-width:600px; text-align:left; }
+    .kv b { color:#374151; }
+    .buildTag { position: fixed; right: 8px; bottom: 8px; font-size: 12px; color: #555; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <header><strong>WWL Device Dashboard</strong></header>
+  <div class="buildTag" id="uiBuild">UI Build: --</div>
+  <div class="wrap">
+    <h1>Winwinlab Temp &amp; Humidity</h1>
+
+    <div class="data">Firmware Version: <span id="firmwareVersion">--</span></div>
+
+    <div class="pills" id="espPills">
+      <!-- Pills populated by JS -->
+    </div>
+
+    <div class="kv">
+      <b>IP Address:</b> <span id="ipAddress">--</span>
+      <b>Status:</b>     <span id="status">--</span>
+      <b>Uptime:</b>     <span id="uptime">--</span>
+      <b>WiFi RSSI:</b>  <span id="rssi">--</span>
+      <b>FS Usage:</b>   <span id="fs">--</span>
+    </div>
+
+    <div id="alerts"></div>
+          <h2>Network Health</h2>
+     <div id="healthCard" class="sensor">
+       <div class="kv">
+         <b>RSSI:</b>        <span id="h_rssi">--</span>
+         <b>Free heap:</b>   <span id="h_freeHeap">--</span>
+         <b>Min heap:</b>    <span id="h_minFreeHeap">--</span>
+         <b>FS free:</b>     <span id="h_fsFree">--</span>
+         <b>FS used %:</b>   <span id="h_fsUsedPct">--</span>
+       </div>
+     </div>
+
+    <h2>Live Sensors</h2>
+    <div id="sensors"></div>
+
+    <div class="footer">
+      <a href="/manage" class="button">Manage</a>
+      <p>Updates every ~0.5–1s</p>
+    </div>
+  </div>
+  <script>
+   (function(){
+     console.log('[WWL] DASH BUILD %firmwareVersion% loaded at ' + new Date().toISOString());
+     // quick helpers
+     const $ = (id) => document.getElementById(id);
+     let state = {};
+     function fmtUptime(ms){
+       const s=Math.floor(ms/1000), d=Math.floor(s/86400), h=Math.floor((s%86400)/3600),
+             m=Math.floor((s%3600)/60), ss=s%60;
+       return (d?d+'d ':'')+h+'h '+m+'m '+ss+'s';
+     }
+     function pill(label, cls){ return `<span class="pill ${cls}">${label}</span>`; }
+
+     // --- Live WebSocket updates (in addition to HTTP polling) ---
+     const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+     let ws;
+     function openWS(){
+       try {
+         ws = new WebSocket(WS_URL);
+         ws.onmessage = (ev) => {
+           try {
+             const msg = JSON.parse(ev.data);
+             // Ignore OTA-only messages that don't carry dashboard fields
+             if (msg && (msg.ipAddress || msg.esp || msg.sensors)) {
+               updateUI(msg);
+             }
+           } catch(err) { console.log('ws msg parse err', err); }
+         };
+         ws.onclose = () => setTimeout(openWS, 2000); // auto-reconnect
+       } catch(err) { console.log('ws open err', err); }
+     }
+
+     function updateUI(patch){
+       // Merge incoming partial payload into cached state so UI can update
+       // even if one of the HTTP calls fails/hangs.
+       if (patch && (patch.ipAddress !== undefined)) state.ipAddress = patch.ipAddress;
+       if (patch && (patch.status !== undefined))    state.status    = patch.status;
+       if (patch && patch.esp)                       state.esp       = patch.esp;
+       if (patch && Array.isArray(patch.alerts))     state.alerts    = patch.alerts;
+       if (patch && Array.isArray(patch.sensors))    state.sensors   = patch.sensors;
+       if (patch && (patch.fw !== undefined))        state.fw        = patch.fw;
+
+       const data = state;
+
+       // Firmware version (from /status)
+       if (data.fw) {
+         $("firmwareVersion").textContent = data.fw;
+         const ub = document.getElementById("uiBuild");
+         if (ub) ub.textContent = "UI Build: " + data.fw;
+       }
+
+       // header details
+       const esp = data.esp || {};
+       const ipVal = (data.ipAddress !== undefined && data.ipAddress !== null && data.ipAddress !== "")
+                       ? data.ipAddress
+                       : (esp.wifi && esp.wifi.ip ? esp.wifi.ip : undefined);
+       $("ipAddress").textContent = ipVal ? ipVal : "--";
+       $("status").textContent    = (data.status !== undefined) ? data.status : "--";
+
+       $("uptime").textContent = esp.uptimeMs ? fmtUptime(esp.uptimeMs) : "--";
+       $("rssi").textContent   = (esp.wifi && (esp.wifi.rssi!==undefined)) ? (esp.wifi.rssi+" dBm") : "--";
+       if ($("h_rssi") && esp.wifi && (esp.wifi.rssi !== undefined)) $("h_rssi").textContent = esp.wifi.rssi + " dBm";
+       $("fs").textContent     = (esp.fs ? `${esp.fs.used}/${esp.fs.total} (${esp.fs.usedPct||0}%)` : "--");
+
+       const pills = [];
+       pills.push(pill(`WiFi: ${esp.wifi && esp.wifi.connected ? 'Connected' : 'Offline'}`, esp.wifi && esp.wifi.connected ? 'ok':'err'));
+       pills.push(pill(`MQTT: ${esp.mqttConnected ? 'Connected' : 'Offline'}`, esp.mqttConnected ? 'ok' : 'warn'));
+       pills.push(pill(`Capture: ${data.status==='Paused' ? 'Paused' : 'Running'}`, data.status==='Paused' ? 'warn':'ok'));
+       $("espPills").innerHTML = pills.join('');
+
+       const alertsDiv = $("alerts");
+       alertsDiv.innerHTML = "";
+       if (Array.isArray(data.alerts)) {
+         data.alerts.forEach(a => {
+           const div = document.createElement('div');
+           div.className = `alert ${a.severity||'info'}`;
+           div.textContent = a.message || '';
+           alertsDiv.appendChild(div);
+         });
+       }
+
+       const sensorsDiv = $("sensors");
+       sensorsDiv.innerHTML = "";
+       if (Array.isArray(data.sensors)) {
+         data.sensors.forEach(sensor => {
+           const sensorDiv = document.createElement("div");
+           sensorDiv.className = "sensor";
+           sensorDiv.innerHTML = `${sensor.label} &nbsp;&nbsp; ${sensor.reading_value}`;
+           sensorsDiv.appendChild(sensorDiv);
+         });
+       }
+     }
+
+     let lastStatus = null;
+     async function fetchHealth(){
+       try{
+         const resp = await fetch('/health?v=' + Date.now(), {cache:'no-store'});
+         if(resp.ok){
+           const h = await resp.json();
+           updateHealthUI(h);
+         }
+       }catch(e){ console.log('health fetch error', e); }
+     }
+
+     function updateHealthUI(h){
+       try{
+         const hv = h.health || {};
+         if ($("h_rssi")        && (h.rssi !== undefined))          $("h_rssi").textContent        = h.rssi + " dBm";
+         if ($("h_freeHeap")    && (hv.freeHeap !== undefined))     $("h_freeHeap").textContent    = hv.freeHeap + " B";
+         if ($("h_minFreeHeap") && (hv.minFreeHeap !== undefined))  $("h_minFreeHeap").textContent = hv.minFreeHeap + " B";
+         if ($("h_fsFree")      && (hv.fsFree !== undefined))       $("h_fsFree").textContent      = hv.fsFree + " B";
+         if ($("h_fsUsedPct")   && (hv.fsUsedPct !== undefined))    $("h_fsUsedPct").textContent   = hv.fsUsedPct + " %";
+       }catch(e){}
+     }
+     async function pull(){
+       // 1) Fetch status first and update UI immediately
+       try{
+         const stResp = await fetch('/status?v=' + Date.now(), {cache:'no-store'});
+         if(stResp.ok){
+           lastStatus = await stResp.json();
+           updateUI(lastStatus);
+         }
+       }catch(e){ console.log('status fetch error', e); }
+
+       // 2) Fetch sensors separately; don't block status updates
+       try{
+         const sensResp = await fetch('/get-sensors?v=' + Date.now(), {cache:'no-store'});
+         if(sensResp.ok){
+           const sens = await sensResp.json();
+           const merged = lastStatus ? Object.assign({}, lastStatus, {sensors: sens.sensors || []})
+                                     : {sensors: sens.sensors || []};
+           updateUI(merged);
+         }
+       }catch(e){ console.log('sensors fetch error', e); }
+     }
+
+     function init(){
+       $("firmwareVersion").textContent = '--';
+       $("ipAddress").textContent = location.hostname || "--";
+       openWS();
+       pull();
+       setInterval(pull, 1000); // 1 Hz polling (robust even if WS is blocked)
+       fetchHealth();
+       setInterval(fetchHealth, 5000);
+     }
+     if (document.readyState === 'loading') {
+       document.addEventListener('DOMContentLoaded', init);
+     } else {
+       init();
+     }
+   })();
+ </script>
+</body>
+</html>

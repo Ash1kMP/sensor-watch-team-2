@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Labels Management</title>
+  <style>
+    body{font-family:Arial,sans-serif;text-align:center;background:#f4f4f4;margin:0}
+    h1{color:#333}
+    .sensor{margin:10px 0;padding:10px;background:#fff;border-radius:5px;box-shadow:0 0 5px rgba(0,0,0,0.1)}
+    .button{background:#3498db;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;margin:5px;border:none;cursor:pointer}
+    .button:hover{background:#2377a5}
+    form{display:inline-block;margin-top:20px}
+    #msg{margin:10px 0;color:#374151}
+  </style>
+</head>
+<body>
+  <h1>Labels Management</h1>
+  <div id="sensors"></div>
+  <form id="labelInputs">
+    <h2>Update Sensor Labels</h2>
+    <div id="sensorInputs"></div>
+    <button type="submit" class="button">Save Labels</button>
+  </form>
+  <div id="msg"></div>
+  <br />
+  <a href="/manage" class="button">Back</a>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function note(t){ $("msg").textContent = t || ""; }
+
+    // Build WS URL from current origin (works on any port and http/https)
+    const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+    let wsPaused = false;
+    const ws = new WebSocket(WS_URL);
+
+    ws.onmessage = function(event){
+      if(wsPaused) return;
+      try{
+        const data = JSON.parse(event.data);
+        const sensorsDiv = $("sensors");
+        const sensorInputs = $("sensorInputs");
+        sensorsDiv.innerHTML = "";
+        sensorInputs.innerHTML = "";
+        if(Array.isArray(data.sensors)){
+          data.sensors.forEach(sensor => {
+            const sensorDiv = document.createElement('div');
+            sensorDiv.className = 'sensor';
+            sensorDiv.innerHTML = `${sensor.label} &nbsp;&nbsp; ${sensor.reading_value ?? ''}`;
+            sensorsDiv.appendChild(sensorDiv);
+
+            const inputDiv = document.createElement('div');
+            const clean = (sensor.label || '').replace(/^S\d+:\s*/, '');
+            inputDiv.innerHTML = `
+              <label for="${sensor.id}">Label for ${sensor.id}:</label>
+              <input type="text" id="${sensor.id}" name="${sensor.id}" value="${clean}"
+                onfocus="wsPaused = true;" onblur="wsPaused = false;">
+            `;
+            sensorInputs.appendChild(inputDiv);
+          });
+        }
+      }catch(e){ console.error('Error parsing WS JSON:', e); }
+    };
+
+    // Save labels
+    $("labelInputs").addEventListener("submit", function(e){
+      e.preventDefault();
+      const labels = {};
+      Array.from($("sensorInputs").children).forEach(div => {
+        const input = div.querySelector('input');
+        if(input) labels[input.id] = input.value;
+      });
+      note('Saving…');
+      fetch('/update-labels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(labels)
+      })
+      .then(r => r.json())
+      .then(d => { note(d.status === 'success' ? 'Labels updated.' : 'Update failed'); })
+      .catch(err => { console.error('Update error:', err); note('Error updating labels'); })
+      .finally(() => setTimeout(()=>note(''), 2000));
+    });
+
+    // Seed once from HTTP in case WS is slow
+    fetch('/get-sensors?v='+Date.now()).then(r=>r.json()).then(d=>{ ws.onmessage({data: JSON.stringify(d)}); });
+  </script>
+</body>
+</html>

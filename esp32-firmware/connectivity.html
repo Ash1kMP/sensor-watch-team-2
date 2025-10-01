@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connectivity Management</title>
+  <style>
+    body{font-family:Arial,sans-serif;text-align:center;background:#f4f4f4;margin:0}
+    h1{color:#333}
+    .button{background:#3498db;color:#fff;padding:10px 20px;border-radius:5px;display:inline-block;margin:5px;text-decoration:none;border:none;cursor:pointer}
+    .button:hover{background:#2377a5}
+    input[type="text"],input[type="password"],select{padding:8px;margin:5px}
+    #msg{margin-top:10px;color:#374151}
+  </style>
+</head>
+<body>
+  <h1>Connectivity Management</h1>
+
+  <div>
+    <button onclick="disconnectWifi()" class="button">Disconnect WiFi (Force AP Mode)</button>
+  </div>
+
+  <div>
+    <h2>Connect to a WiFi Network</h2>
+    <button onclick="scanNetworks()" class="button">Scan for Networks</button><br />
+    <select id="networkList"></select><br />
+    <input type="text" id="ssid" placeholder="SSID" />
+    <input type="password" id="password" placeholder="Password" />
+    <br />
+    <button onclick="connectWifi()" class="button" id="connectBtn">Connect</button>
+  </div>
+
+  <br />
+  <a href="/manage" class="button">Back</a>
+  <div id="msg"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function note(t){ $("msg").textContent = t; }
+
+    function disconnectWifi(){
+      note("Disconnecting…");
+      fetch("/disconnect", { method: "POST" })
+        .then(r => r.text())
+        .then(txt => { alert(txt); window.location.href = "/manage"; })
+        .catch(err => { console.error(err); note("Disconnect failed: "+err); });
+    }
+
+    function scanNetworks(){
+      note("Scanning…");
+      fetch("/scan")
+        .then(r => r.json())
+        .then(data => {
+          const list = $("networkList");
+          list.innerHTML = "";
+          (data.networks||[]).forEach(n => {
+            const o = document.createElement("option");
+            o.value = n.ssid;
+            o.text  = `${n.ssid} (${n.rssi} dBm)`;
+            list.appendChild(o);
+          });
+          list.onchange = function(){ $("ssid").value = this.value; };
+          note((data.networks||[]).length ? "Select a network" : "No networks found");
+        })
+        .catch(err => { console.error(err); note("Scan failed: "+err); });
+    }
+
+    function connectWifi(){
+      const btn = $("connectBtn");
+      const ssid = $("ssid").value;
+      const password = $("password").value;
+      if(!ssid){ alert("Enter SSID"); return; }
+      btn.disabled = true; note("Connecting…");
+      fetch("/connectivity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ssid, password })
+      })
+        .then(r => r.text())
+        .then(txt => { alert(txt); window.location.href = "/manage"; })
+        .catch(err => { console.error(err); note("Connect failed: "+err); })
+        .finally(() => { btn.disabled = false; });
+    }
+  </script>
+</body>
+</html>
